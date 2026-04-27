@@ -43,15 +43,7 @@ def lazy_import_errors(
             import and returns an error message string to be used for the
             ModuleNotFoundError. (Mutually exclusive with get_extras_modules)
     """
-    if get_extras_modules is not None and make_error_message is not None:
-        raise TypeError(
-            "Cannot specify both 'get_extras_modules' and 'make_error_message'"
-        )
-
-    if get_extras_modules is not None:
-        make_error_message = partial(_make_extras_import_error, get_extras_modules)
-
-    return _LazyImportErrorCtx(make_error_message)
+    pass
 
 
 ## Implementation Details ######################################################
@@ -84,24 +76,7 @@ def _make_extras_import_error(
             will be returned, otherwise None will be returned to allow the base
             error message to be used.
     """
-    # Get the set of extras modules from the library
-    extras_modules = get_extras_modules()
-
-    # Look through frames in the stack to see if there's an extras module
-    extras_module = None
-    for frame in _FastFrameGenerator():
-        frame_module = frame.f_globals.get("__name__", "")
-        if frame_module in extras_modules:
-            extras_module = frame_module
-            break
-
-    # If an extras module was found, return the formatted message
-    if extras_module is not None:
-        base_module = extras_module.partition(".")[0]
-        return (
-            f"No module named '{missing_module_name}'. To install the "
-            + f"missing dependencies, run `pip install {base_module}[{extras_module}]`"
-        )
+    pass
 
 
 class _LazyImportErrorCtx(AbstractContextManager):
@@ -168,12 +143,7 @@ class _LazyErrorAttr(type):
         """Store the name of the attribute being accessed and the missing module"""
 
         def _raise(*_, **__):
-            msg = None
-            if make_error_message is not None:
-                msg = make_error_message(missing_module_name)
-            if msg is None:
-                msg = f"No module named '{missing_module_name}'"
-            raise ModuleNotFoundError(msg)
+            pass
 
         self._raise = _raise
 
@@ -445,7 +415,7 @@ class _LazyErrorLoader(importlib.abc.Loader):
         self._make_error_message = make_error_message
 
     def create_module(self, spec):
-        return _LazyErrorModule(spec.name, self._make_error_message)
+        pass
 
     def exec_module(self, *_, **__):
         """Nothing to do here because the errors will be thrown by the module
@@ -485,31 +455,7 @@ class _LazyErrorMetaFinder(importlib.abc.MetaPathFinder):
         lazy ModuleNotFoundError that will trigger when the module is used
         rather than when it is imported.
         """
-        importing_pkg = None
-
-        for pkgname in self._get_non_import_modules():
-            # If this is the first hit beyond this module, it's the module doing
-            # the import
-            if importing_pkg is None and pkgname != self.this_module:
-                importing_pkg = pkgname
-                break
-
-        assert None not in [
-            importing_pkg,
-            self.calling_pkg,
-        ], "Could not determine calling and importing pkg"
-
-        # If the two are not the same, don't mask this with lazy errors
-        if importing_pkg != self.calling_pkg:
-            return None
-
-        # Set up a lazy loader that wraps the Loader that defers the error to
-        # exec_module time
-        loader = _LazyErrorLoader(self._make_error_message)
-
-        # Create a spec from this loader so that it acts at import-time like it
-        # loaded correctly
-        return importlib.util.spec_from_loader(fullname, loader)
+        pass
 
     ## Implementation Details ######################################################
 
@@ -518,13 +464,7 @@ class _LazyErrorMetaFinder(importlib.abc.MetaPathFinder):
 
         # Figure out the module that is doing the import and the module that is
         # calling import_module
-        return filter(
-            lambda x: x != "importlib",
-            (
-                frame.f_globals.get("__name__", "").split(".")[0]
-                for frame in _FastFrameGenerator()
-            ),
-        )
+        pass
 
 
 class _FastFrameGenerator:
@@ -556,6 +496,4 @@ def _is_import_time() -> bool:
         bool:
             True if the execution is at import time otherwise, False
     """
-    return "importlib._bootstrap" in [
-        frame.f_globals.get("__name__", "") for frame in _FastFrameGenerator()
-    ]
+    pass
